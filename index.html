@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scheduler</title>
+    <style>
+table, td, th {
+  border: 1px solid;
+  border-collapse: collapse;
+}
+</style>
+  </head>
+
+  <body>
+    <h1>OLG Team Clean Scheduler🧹</h1>
+    <form id="jobForm">
+      <div id="jobsContainer">
+        <!-- Initial job row -->
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Vacuum Ipswich">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="25">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Mop Ipswich">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="21">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Ipswich Bathrooms">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="31">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Sacristy + Dusting">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="9">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Vacuum Carpets">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="11">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Vacuum Boylston+Wgt Rm">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="22">
+        </div>
+        <div class="job-row">
+          <input type="text" class="job-name" placeholder="Job Name" value="Mop Boylston+Wgt Rm">
+          <input type="number" class="job-frequency" placeholder="Frequency (per week)" value="1">
+          <input type="number" class="job-mins" placeholder="Minutes" value="17">
+        </div>
+      </div>
+
+      <label for="numWorkers">Number of Workers:</label>
+      <input type="number" id="numWorkers" placeholder="Enter number of workers" value="5">
+
+      <label for="numWeeks">Number of Weeks:</label>
+      <input type="number" id="numWeeks" placeholder="Enter number of weeks" value="15">
+
+      <button type="button" id="addJob">Add Job</button>
+      <button type="button" id="submitForm">Submit</button>
+    </form>
+
+    <div id="output"></div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const jobsContainer = document.getElementById('jobsContainer');
+        const addJobButton = document.getElementById('addJob');
+        const submitButton = document.getElementById('submitForm');
+        const outputDiv = document.getElementById('output');
+
+        addJobButton.addEventListener('click', function() {
+          // Create a new job row
+          const newJobRow = document.createElement('div');
+          newJobRow.classList.add('job-row');
+          newJobRow.innerHTML = `
+                    <input type="text" class="job-name" placeholder="Job Name">
+                    <input type="number" class="job-frequency" placeholder="Frequency (per week)">
+                    <input type="number" class="job-mins" placeholder="Minutes">
+                `;
+
+          jobsContainer.appendChild(newJobRow);
+        });
+
+        submitButton.addEventListener('click', function() {
+            // Get the number of workers and weeks
+            const numWorkers = document.getElementById('numWorkers').value;
+            const numWeeks = document.getElementById('numWeeks').value;
+
+            // Get all job rows
+            const jobRows = document.querySelectorAll('.job-row');
+
+            // Prepare data
+            const jobData = [];
+            jobRows.forEach(row => {
+              const name = row.querySelector('.job-name').value;
+              const frequency = row.querySelector('.job-frequency').value;
+              const mins = parseInt(row.querySelector('.job-mins').value);
+              jobData.push({
+                name,
+                frequency,
+                mins
+              });
+            });
+
+            // Randomly assign workers to jobs
+            // Randomly assign workers to jobs while meeting the constraints
+            // Calculate the total minutes required for all jobs
+
+            let lowestZeroesAssignments = [];
+            let zeroCount = Number.MAX_SAFE_INTEGER;
+            // Calculate the total minutes required for all jobs
+            const totalMinutes = jobData.reduce((acc, job) => acc + parseInt(job.mins), 0);
+
+            // Calculate the target minutes per worker per week
+            const targetMinutesPerWorkerPerWeek = totalMinutes / (numWorkers * numWeeks);
+            console.log(totalMinutes);
+            console.log(targetMinutesPerWorkerPerWeek);
+            // Create an array to keep track of worker's total assigned minutes
+            const workerMinutes = Array.from({
+              length: numWorkers
+            }, () => 0);
+						const NUM_ROUNDS = 1000;
+            for (let rounds = NUM_ROUNDS; rounds > 0; rounds--) {
+              //console.log(rounds);
+              // Randomly shuffle the available workers array
+              const shuffleArray = (array) => {
+                for (let i = array.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [array[i], array[j]] = [array[j], array[i]];
+                }
+              };
+
+              // Initialize available workers array
+              const availableWorkers = Array.from({
+                length: numWorkers
+              }, (_, i) => i + 1);
+              shuffleArray(availableWorkers);
+
+              // Randomly assign workers to jobs while balancing minutes
+              const workerAssignments = [];
+
+              for (let week = 1; week <= numWeeks; week++) {
+                const assignments = [];
+                jobData.forEach((job, index) => {
+
+                  shuffleArray(availableWorkers);
+                  let assignedWorker;
+                  let minDifference = Number.MAX_SAFE_INTEGER;
+
+                  availableWorkers.forEach(worker => {
+                    const workerTotalMinutes = workerMinutes[worker - 1] + job.mins;
+                    const difference = Math.abs(workerTotalMinutes - targetMinutesPerWorkerPerWeek);
+
+                    if (difference < minDifference) {
+                      assignedWorker = worker;
+                      minDifference = difference;
+                    }
+                  });
+
+                  assignments.push(assignedWorker);
+                  workerMinutes[assignedWorker - 1] += job.mins;
+                });
+
+                workerAssignments.push(assignments);
+
+                // Reset available workers if all workers have been assigned for the week
+                if (availableWorkers.length === 0) {
+                  availableWorkers.push(...Array.from({
+                    length: numWorkers
+                  }, (_, i) => i + 1));
+                  shuffleArray(availableWorkers);
+                }
+              }
+              // see how many zeroes in the table, the most balanced table will be the one with the fewest
+
+              const workerJobCounts1 = Array.from({
+                length: numWorkers
+              }, () => Array(jobData.length).fill(0));
+              let zeroes = 0;
+              workerAssignments.forEach((assignments) => {
+                assignments.forEach((worker, jobIndex) => {
+                  workerJobCounts1[worker - 1][jobIndex]++;
+                });
+              });
+              workerJobCounts1.forEach((worker) => {
+                  zeroes += Math.max(...worker) - Math.min(...worker);
+                  //zeroes += worker.filter(v => v === 0).length;
+              });
+            if (zeroes < zeroCount) {
+              zeroCount = zeroes;
+              console.log("new low " + zeroes);
+              lowestZeroesAssignments = workerAssignments;
+              if (zeroCount == 0){
+              	//can't get any lower so itterations useless
+                rounds = 0;
+              }
+            }
+          }
+          workerAssignments = lowestZeroesAssignments;
+
+          // Create a table and display data
+          const table = document.createElement('table'); table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            ${jobData.map(job => `<th>${job.name}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${workerAssignments.map((assignments, index) => `
+                            <tr>
+                                <td>Week ${index + 1}</td>
+                                ${assignments.map(assignment => `<td>${assignment}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+					table.id = "workerAssignments";
+          outputDiv.innerHTML = `
+                    <h2>Generated Schedule</h2>
+                    <p>Number of Workers: ${numWorkers}</p>
+                    <p>Number of Weeks: ${numWeeks}</p>
+                    <p>Work distribution quotent (smaller better): ${zeroCount}</p>
+                    <p>Rounds run: ${NUM_ROUNDS}</p>
+                `;
+
+          outputDiv.appendChild(table);
+
+const colors = ['white','#ffb3ba', '#bae1ff', '#ffffba', '#baffc9', '#D2C4F4','grey'];
+
+        // Get a reference to the table
+        const tablee = document.getElementById('workerAssignments');
+
+        // Loop through the table rows and cells
+        for (let i = 0; i < tablee.rows.length; i++) {
+            const row = tablee.rows[i];
+            for (let j = 0; j < row.cells.length; j++) {
+                const cell = row.cells[j];
+                const cellValue = parseInt(cell.textContent);
+
+                // Check if the cell value is a valid index in the colors array
+                if (!isNaN(cellValue) && cellValue >= 0 && cellValue < colors.length) {
+                    cell.style.backgroundColor = colors[cellValue];
+                }
+            }
+        }
+
+
+          // Calculate minutes worked by each worker
+          const workerMinutesTable = document.createElement('table');
+          const workerMinutesData = Array.from({
+            length: numWorkers
+          }, () => 0);
+
+          workerAssignments.forEach((assignments, weekIndex) => {
+            assignments.forEach((worker, jobIndex) => {
+              const mins = jobData[jobIndex].mins;
+              workerMinutesData[worker - 1] += mins;
+            });
+          });
+
+          workerMinutesTable.innerHTML = `
+        <thead>
+            <tr>
+                <th>Worker</th>
+                <th>Total Minutes Worked</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${workerMinutesData.map((minutes, index) => `
+                <tr>
+                    <td>Worker ${index + 1}</td>
+                    <td>${minutes}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+
+          outputDiv.appendChild(document.createElement('hr')); outputDiv.appendChild(workerMinutesTable);
+
+
+
+          // Calculate how many times each worker was assigned to each job
+          const workerJobCounts = Array.from({
+            length: numWorkers
+          }, () => Array(jobData.length).fill(0));
+
+          workerAssignments.forEach((assignments) => {
+            assignments.forEach((worker, jobIndex) => {
+              workerJobCounts[worker - 1][jobIndex]++;
+            });
+          });
+
+          // Create a table for the worker-job assignments
+          const workerJobTable = document.createElement('table'); workerJobTable.innerHTML = `
+    <thead>
+        <tr>
+            <th></th>
+            ${jobData.map(job => `<th>${job.name}</th>`).join('')}
+        </tr>
+    </thead>
+    <tbody>
+        ${workerJobCounts.map((workerCounts, workerIndex) => `
+            <tr>
+                <th>Worker ${workerIndex + 1}</th>
+                ${workerCounts.map(count => `<td>${count}</td>`).join('')}
+            </tr>
+        `).join('')}
+    </tbody>
+`;
+
+          outputDiv.appendChild(document.createElement('hr')); outputDiv.appendChild(workerJobTable);
+
+        });
+      });
+
+    </script>
+    <a href="https://jsfiddle.net/ailgup/ymsbck2f/5/" target="_blank"> Edit in JSFiddle</a>
+  </body>
+
+</html>
